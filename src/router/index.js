@@ -12,7 +12,7 @@ const routes = [
     component: RealtimeNews // 访问根路径时，显示 RealtimeNews 组件
   },
   {
-    path: '/funding-rate-viewer', // “资金费率”页面的路径
+    path: '/funding-rate-viewer/', // “资金费率”页面的路径
     name: 'Rates',
     component: FundingRateTable // 访问 /rates 时，显示 FundingRateTable 组件
   }
