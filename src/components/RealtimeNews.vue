@@ -41,7 +41,7 @@ const isLoading = ref(true);
 const error = ref(null);
 const originalNews = ref([]);
 const selectedLanguage = ref('zh-cn');
-const apiKey = import.meta.env.VITE_SOSO_API_KEY;
+const apiKey = "SOSO-2bedc4e9d8a64962a8b1ad5f78893d48";
 
 onMounted(() => { fetchNews(); });
 

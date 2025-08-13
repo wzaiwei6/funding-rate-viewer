@@ -1,7 +1,7 @@
 <template>
   <div id="nav-container">
     <router-link to="/">实时快讯</router-link>
-    <router-link to="/rates">资金费率查询</router-link>
+    <router-link to="/funding-rate-viewer/">资金费率查询</router-link>
   </div>
 
   <router-view />
