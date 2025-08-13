@@ -27,18 +27,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # 更新到 v4
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4 # 更新到 v4
         with:
           node-version: 18
           cache: 'npm'
       - name: Install dependencies
-        run: npm install
+        run: npm ci # 使用 npm ci 更适合CI环境
       - name: Build
         run: npm run build
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        # 这是新的、正确的上传工具
+        uses: actions/upload-pages-artifact@v3 # 更新到 v3
         with:
           path: './dist'
 
@@ -52,4 +53,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        # 这是新的、正确的部署工具
+        uses: actions/deploy-pages@v4 # 更新到 v4
