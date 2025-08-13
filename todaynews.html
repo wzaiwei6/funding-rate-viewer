@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时加密货币快讯 (可展开)</title>
+    <style>
+        /* CSS样式与之前相似，但为展开/收起功能增加了新样式 */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; }
+        .header { position: relative; padding: 10px 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; color: #2c3e50; }
+        #language-switcher { position: absolute; top: 10px; right: 0; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background-color: #fff; font-size: 14px; }
+        #news-container { display: grid; gap: 20px; }
+        .news-item { background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .news-item .meta { font-size: 12px; color: #888; margin-bottom: 10px; }
+        .news-item .author { font-weight: bold; color: #555; }
+        .news-item h2 { font-size: 20px; margin-top: 0; margin-bottom: 15px; color: #1a5276; }
+        .news-item .content { font-size: 16px; }
+        .news-item .content img { max-width: 100%; height: auto; border-radius: 4px; margin-top: 10px; }
+        .message { text-align: center; font-size: 18px; color: #777; padding: 40px; }
+
+        /* --- 新增/修改的CSS --- */
+        .content.collapsible {
+            /* 平滑的高度变化过渡效果 */
+            transition: max-height 0.5s ease-in-out;
+            position: relative;
+        }
+        .content.collapsed {
+            /* 默认折叠时的高度 */
+            max-height: 120px; 
+            overflow: hidden;
+        }
+        /* 在折叠文本的末尾添加一个渐变蒙版，提示下面还有内容 */
+        .content.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(to bottom, transparent, white);
+        }
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 8px 0;
+            margin-top: 10px;
+        }
+        .toggle-btn:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>实时加密货币快讯</h1>
+        <select id="language-switcher">
+            <option value="zh-cn">简体中文</option>
+            <option value="zh-tw">繁體中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="es">Español</option>
+        </select>
+    </header>
+
+    <main id="news-container">
+        <div class="message" id="loading-message">正在加载最新快讯...</div>
+    </main>
+
+    <script>
+    const newsContainer = document.getElementById('news-container');
+    const languageSwitcher = document.getElementById('language-switcher');
+    const loadingMessage = document.getElementById('loading-message');
+
+    let currentNewsData = null;
+
+    // --- renderNews 函数已更新 ---
+    function renderNews(language) {
+        if (!currentNewsData || !currentNewsData.data || !currentNewsData.data.list) {
+            newsContainer.innerHTML = `<div class="message">没有可显示的新闻。</div>`;
+            return;
+        }
+        newsContainer.innerHTML = '';
+        const newsList = currentNewsData.data.list;
+        const charLimit = 200; // 设置内容长度阈值
+
+        for (const item of newsList) {
+            let contentForLang = item.multilanguageContent.find(c => c.language === language) 
+                              || item.multilanguageContent.find(c => c.language === 'en');
+            if (!contentForLang) continue;
+
+            const newsItemElement = document.createElement('div');
+            newsItemElement.className = 'news-item';
+            const formattedTime = new Date(item.releaseTime).toLocaleString();
+            
+            // 移除HTML标签来计算纯文本长度
+            const plainText = (contentForLang.content || '').replace(/<[^>]*>/g, '');
+            const isLongContent = plainText.length > charLimit;
+
+            // 根据内容长度决定HTML结构
+            let contentHTML = '';
+            if (isLongContent) {
+                // 如果内容过长，添加折叠相关的class和一个按钮
+                contentHTML = `
+                    <div class="content collapsible collapsed">${contentForLang.content}</div>
+                    <button class="toggle-btn">展开阅读</button>
+                `;
+            } else {
+                // 内容不长，正常显示
+                contentHTML = `<div class="content">${contentForLang.content}</div>`;
+            }
+
+            newsItemElement.innerHTML = `
+                <div class="meta">
+                    <span class="author">作者: ${item.author}</span> | 
+                    <span>发布于: ${formattedTime}</span>
+                </div>
+                <h2>${contentForLang.title}</h2>
+                ${contentHTML} 
+            `;
+            
+            newsContainer.appendChild(newsItemElement);
+        }
+    }
+
+    async function fetchNews() {
+        const apiKey = 'SOSO-2bedc4e9d8a64962a8b1ad5f78893d48'; // <--- 关键：请务必替换成您自己的API Key
+        const apiUrl = 'https://openapi.sosovalue.com/api/v1/news/featured?pageNum=1&pageSize=10&categoryList=1,2';
+
+        if (apiKey === 'YOUR_x-soso-api-key') {
+            loadingMessage.textContent = '错误：请在代码中填写您的 API Key。';
+            loadingMessage.style.color = 'red';
+            return;
+        }
+
+        try {
+            const response = await fetch(apiUrl, { headers: { 'x-soso-api-key': apiKey } });
+            if (!response.ok) throw new Error(`API 请求失败，状态码: ${response.status}`);
+            const data = await response.json();
+            if (data.code !== 0) throw new Error(`API 业务错误: ${data.msg || '未知错误'}`);
+            
+            currentNewsData = data;
+            renderNews(languageSwitcher.value);
+        } catch (error) {
+            console.error('获取新闻数据时出错:', error);
+            loadingMessage.textContent = `加载失败: ${error.message}。请检查API Key或网络连接。`;
+            loadingMessage.style.color = 'red';
+        }
+    }
+
+    languageSwitcher.addEventListener('change', () => {
+        if (currentNewsData) {
+            renderNews(languageSwitcher.value);
+        }
+    });
+    
+    // --- 新增：为所有“展开/收起”按钮添加事件委托 ---
+    newsContainer.addEventListener('click', function(event) {
+        // 检查点击的是否是我们的toggle按钮
+        if (event.target.classList.contains('toggle-btn')) {
+            const button = event.target;
+            // 找到按钮对应的content元素 (它是按钮的前一个兄弟元素)
+            const contentDiv = button.previousElementSibling;
+
+            if (contentDiv && contentDiv.classList.contains('collapsible')) {
+                // 切换 'collapsed' 类
+                contentDiv.classList.toggle('collapsed');
+
+                // 更新按钮文本
+                if (contentDiv.classList.contains('collapsed')) {
+                    button.textContent = '展开阅读';
+                } else {
+                    button.textContent = '收起';
+                }
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', fetchNews);
+
+    </script>
+</body>
+</html>
